@@ -1,10 +1,7 @@
 name: Paulaner Jersey Watcher
 
+# Nur manueller Start – laeuft dann einmal ~5 Std. durch und prueft selbst.
 on:
-  schedule:
-    # Alle 5 Minuten (kleinster erlaubter Takt bei GitHub Actions).
-    - cron: "*/5 * * * *"
-  # Erlaubt manuelles Starten ueber den "Run workflow"-Button.
   workflow_dispatch:
     inputs:
       test:
@@ -13,8 +10,9 @@ on:
         default: false
 
 jobs:
-  check:
+  watch:
     runs-on: ubuntu-latest
+    timeout-minutes: 340   # Sicherheitslimit, unter GitHubs 6-Std-Grenze
     steps:
       - name: Code auschecken
         uses: actions/checkout@v4
@@ -24,9 +22,12 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Seite pruefen
+      - name: Seite dauerhaft beobachten
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_SERVER: ${{ vars.NTFY_SERVER }}
           TEST_NOTIFY: ${{ inputs.test }}
+          LOOP: "1"
+          LOOP_MINUTES: "300"      # ~5 Stunden beobachten
+          INTERVAL_SECONDS: "60"   # jede Minute pruefen
         run: python check.py
