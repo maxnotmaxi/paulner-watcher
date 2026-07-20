@@ -1,0 +1,32 @@
+name: Paulaner Jersey Watcher
+
+on:
+  schedule:
+    # Alle 5 Minuten (kleinster erlaubter Takt bei GitHub Actions).
+    - cron: "*/5 * * * *"
+  # Erlaubt manuelles Starten ueber den "Run workflow"-Button.
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Test-Push senden (ntfy pruefen)"
+        type: boolean
+        default: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Seite pruefen
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_SERVER: ${{ vars.NTFY_SERVER }}
+          TEST_NOTIFY: ${{ inputs.test }}
+        run: python check.py
